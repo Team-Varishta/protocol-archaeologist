@@ -1,0 +1,11 @@
+:root {
+  --bg: #0a0a0a;
+}
+
+body {
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  font-size: 16px;
+}
