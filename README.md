@@ -1,5 +1,3 @@
----
-
 ## 🔒 Security Features
 
 This repository adheres to the IBM Hackathon security guidelines:
@@ -7,8 +5,6 @@ This repository adheres to the IBM Hackathon security guidelines:
 *   `.gitignore` — Prevents committing credentials and live session files
 *   `.bobignore` — Prevents AI assistants from reading and logging credentials
 *   `.env.example` — Standardized template for environment variables
-
----
 
 ## 📋 Before Every Commit
 
