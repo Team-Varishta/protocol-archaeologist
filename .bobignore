@@ -1,0 +1,16 @@
+# Credentials and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Dependencies and build outputs
+node_modules/
+.next/
+dist/
+build/
+
+# Logs and system artifacts
+*.log
+npm-debug.log*
+.DS_Store
