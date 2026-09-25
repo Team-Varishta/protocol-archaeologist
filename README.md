@@ -46,10 +46,4 @@ flowchart TD
     AGENTS --> FINDINGS["Discrepancy Matrix"]
     FINDINGS --> UI["Next.js Dashboard"]
     FINDINGS -->|Edit Permission| REWRITE["Autonomously Refactored Docs & Tests"]
-
-    FINDINGS --> UI[Next.js Dashboard]
-    
-    FINDINGS -->|Edit Permission| REWRITE[Autonomously Refactored Docs & Tests]
-    
-    FINDINGS -->|Edit Permission| REWRITE[Autonomously Refactored Docs & Tests]
 ```
