@@ -29,21 +29,22 @@ This project is not a simple LLM wrapper. It natively utilizes IBM Bob 2.0's mos
 
 ## 🗺️ System Architecture
 
-```mermaid
 flowchart TD
     USER[User / UI] --> ORCHESTRATOR[Node.js Engine]
     ORCHESTRATOR --> BOB[IBM Bob 2.0 Agent]
     
-    subgraph Evidence Layer
+    subgraph EvidenceLayer [Evidence Layer]
         CODE[Source Code]
         LOGS[Runtime Logs]
         GIT[Git History]
     end
     
-    BOB -->|Reads Context| Evidence Layer
+    BOB -->|Reads Context| EvidenceLayer
     BOB -->|Spawns Subagents| AGENTS[Parallel Investigation Subagents]
     
     AGENTS --> FINDINGS[Discrepancy Matrix]
     FINDINGS --> UI[Next.js Dashboard]
+    
+    FINDINGS -->|Edit Permission| REWRITE[Autonomously Refactored Docs & Tests]
     
     FINDINGS -->|Edit Permission| REWRITE[Autonomously Refactored Docs & Tests]
