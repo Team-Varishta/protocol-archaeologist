@@ -18,9 +18,8 @@ const db = {
  * @param {Object} transactionData - Transaction details
  * @param {string} transactionData.accountId - The account ID to debit
  * @param {number} transactionData.amount - Transaction amount
- * @param {string} [transactionData.currency] - Currency code (optional, but required for non-USD)
- * @returns {Promise<Object>} Transaction result
- * @throws {Error} If currency is missing for non-USD transactions
+ * @param {string} [transactionData.currency] - Currency code (required for non-USD accounts; see 2022.3 patch)
+ * @returns {Promise<Object>} Transaction result or HTTP 400 error object
  */
 async function processPayment(transactionData) {
   const { accountId, amount, currency } = transactionData;
@@ -31,10 +30,14 @@ async function processPayment(transactionData) {
     throw new Error(`Account ${accountId} not found`);
   }
 
-  // Check if currency is required for non-USD transactions
-  // According to business rules introduced in 2022, currency is required for international transactions
+  // Currency is required for non-USD accounts (business rule patched in 2022.3).
+  // Return a structured 400 Bad Request instead of throwing an unhandled exception.
   if (!currency && account.currency !== 'USD') {
-    throw new Error('Currency is required for international transactions');
+    return {
+      statusCode: 400,
+      error: 'Bad Request',
+      message: 'Currency is required for international transactions'
+    };
   }
 
   // If currency is not provided, use the account's currency
