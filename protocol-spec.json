@@ -1,0 +1,159 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "POST /api/payment — Ground-Truth Protocol Specification",
+  "description": "Authoritative runtime contract derived from forensic analysis of PaymentService.js and PaymentController.js. This specification OVERRIDES legacy-api.md, which has not been updated since the 2022 multi-currency patch and incorrectly documents 'currency' as optional.",
+
+  "endpoint": {
+    "method": "POST",
+    "path": "/api/payment",
+    "contentType": "application/json",
+    "handler": "PaymentController.processPayment → PaymentService.processPayment",
+    "sources": [
+      "demo/legacy-system/controllers/PaymentController.js",
+      "demo/legacy-system/services/PaymentService.js",
+      "demo/legacy-system/database/schema.sql"
+    ]
+  },
+
+  "request": {
+    "type": "object",
+    "required": ["accountId", "amount"],
+    "additionalProperties": false,
+    "properties": {
+      "accountId": {
+        "type": "string",
+        "description": "ID of the account to debit. Must resolve to a known entry in db.accounts or the service throws 'Account not found' → 400.",
+        "example": "2"
+      },
+      "amount": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "description": "Transaction amount, expressed in the resolved transaction currency. Deducted from account.balance on success."
+      },
+      "currency": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 3,
+        "enum": ["USD", "EUR", "GBP", "JPY"],
+        "description": "ISO 4217 currency code.",
+
+        "x-optionality": "CONDITIONALLY MANDATORY",
+        "x-optionality-rule": "REQUIRED when the target account's native currency is not 'USD'. OPTIONAL (defaults to account.currency) when the account is a USD account.",
+        "x-legacy-doc-override": {
+          "legacyDocClaim": "Optional — defaults to USD if omitted",
+          "legacyDocSource": "demo/legacy-system/docs/legacy-api.md",
+          "override": "INCORRECT since the 2022 multi-currency patch. The runtime guard at PaymentService.js:36-38 makes this field strictly mandatory for any non-USD account. The legacy documentation was never updated to reflect this change.",
+          "evidenceSources": [
+            "demo/legacy-system/services/PaymentService.js:36-38",
+            "demo/legacy-system/database/schema.sql — transactions.currency VARCHAR(3) NOT NULL",
+            "demo/legacy-system/logs/transaction.log — 2023-02-20 and 2023-03-10 ERROR entries"
+          ]
+        },
+
+        "x-runtime-guard": {
+          "introducedYear": 2022,
+          "sourceFile": "demo/legacy-system/services/PaymentService.js",
+          "sourceLine": "36-38",
+          "guardCondition": "!currency && account.currency !== 'USD'",
+          "guardCode": "if (!currency && account.currency !== 'USD') { throw new Error('Currency is required for international transactions'); }",
+          "onViolation": {
+            "throws": "Error('Currency is required for international transactions')",
+            "httpStatus": 400,
+            "responseBody": {
+              "success": false,
+              "error": "Currency is required for international transactions"
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "responses": {
+    "200": {
+      "description": "Payment accepted and committed. Transaction row inserted into db.transactions; account.balance decremented.",
+      "contentType": "application/json",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [true]
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "transactionId": { "type": "number", "description": "Auto-incremented transaction ID." },
+              "status":        { "type": "string", "enum": ["completed"] },
+              "timestamp":     { "type": "string", "format": "date-time", "description": "ISO 8601 UTC timestamp of transaction creation." }
+            },
+            "required": ["transactionId", "status", "timestamp"]
+          }
+        }
+      }
+    },
+    "400": {
+      "description": "Validation or business-rule failure. Covers all thrown errors caught by PaymentController's catch block.",
+      "contentType": "application/json",
+      "triggerConditions": [
+        {
+          "rule": "Account not found",
+          "guardCode": "if (!account) throw new Error(`Account ${accountId} not found`)",
+          "sourceFile": "demo/legacy-system/services/PaymentService.js",
+          "sourceLine": "29-32"
+        },
+        {
+          "rule": "Currency required for non-USD account",
+          "guardCode": "if (!currency && account.currency !== 'USD') throw new Error('Currency is required for international transactions')",
+          "sourceFile": "demo/legacy-system/services/PaymentService.js",
+          "sourceLine": "36-38",
+          "note": "This is the primary documented divergence from legacy-api.md. Confirmed by ERROR entries in transaction.log dated 2023-02-20 and 2023-03-10."
+        }
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "enum": [false]
+          },
+          "error": {
+            "type": "string",
+            "description": "Runtime error message passed verbatim from the thrown Error object.",
+            "examples": [
+              "Currency is required for international transactions",
+              "Account 9 not found"
+            ]
+          }
+        },
+        "required": ["success", "error"]
+      }
+    }
+  },
+
+  "documentationDiscrepancy": {
+    "summary": "The legacy-api.md documentation has been SUPERSEDED for the 'currency' field and must not be trusted by integrators.",
+    "table": [
+      {
+        "field": "currency optionality",
+        "legacyApiMd": "Optional — defaults to USD if omitted",
+        "runtimePaymentServiceJs": "MANDATORY for non-USD accounts — throws if absent"
+      },
+      {
+        "field": "guard condition",
+        "legacyApiMd": "Not documented",
+        "runtimePaymentServiceJs": "!currency && account.currency !== 'USD'"
+      },
+      {
+        "field": "error raised",
+        "legacyApiMd": "Not documented",
+        "runtimePaymentServiceJs": "Error('Currency is required for international transactions')"
+      },
+      {
+        "field": "DB column nullability",
+        "legacyApiMd": "Not documented",
+        "runtimePaymentServiceJs": "transactions.currency VARCHAR(3) NOT NULL — enforced at the database layer"
+      }
+    ]
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ibmBobLogo from './assets/ibm-bob.png';
 import { EvidenceView, SystemMapView, TimelineView, ProtocolSpecView } from './components/DeliverableViews';
 
 // Define TypeScript interfaces for the API response
@@ -173,7 +174,10 @@ function App() {
     return (
       <div className="app-container">
         <header className="app-header">
-          <h1>PROTOCOL ARCHAEOLOGIST</h1>
+          <div className="flex items-center gap-3">
+            <img src={ibmBobLogo} alt="IBM Bob 2.0" className="w-8 h-8 object-contain rounded-none" />
+            <h1>PROTOCOL ARCHAEOLOGIST</h1>
+          </div>
           <p className="app-subtitle">Excavate the truth behind legacy systems.</p>
         </header>
 

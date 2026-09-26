@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Credentials and secrets
 .env
 .env.*
@@ -5,12 +6,20 @@
 *.key
 
 # Dependencies and build outputs
+=======
+>>>>>>> 4df48e0 (feat(ui): finalize ibm bob branding and upload team session evidence)
 node_modules/
 .next/
 dist/
 build/
+<<<<<<< HEAD
 
 # Logs and system artifacts
 *.log
 npm-debug.log*
 .DS_Store
+=======
+.git/
+client/node_modules/
+server/node_modules/
+>>>>>>> 4df48e0 (feat(ui): finalize ibm bob branding and upload team session evidence)
